@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noterr</title>
+    <style>
+        #big-title{
+            margin-top: -4px;
+            margin-left: -18px;
+            margin-top: -18px;
+            margin-right: -18px;
+            margin-bottom: 10px;
+            font-size: 35px;
+            font-weight: bold;
+            background:#000080;
+            color:#FFF;
+            padding: 15px;
+        }
+        #xp-fake-button{
+            position: relative;
+            left: 15px;
+            bottom: 15px;
+            margin:2px 2px 2px 0;
+            
+              float:right;
+              width:14px;
+              height:13.5px;
+              background:#C0C0C0;
+              border-width:1px;
+              border-color:#FFFFFF #808080 #808080 #FFFFFF;
+              padding:0;
+              font-size:9px;
+              font-weight:bold;
+              font-family:Tahoma;
+              text-align:center;
+              focus:none;
+            cursor: wait;
+        }
+        body {
+            font-family:"MS Sans Serif";
+            margin: 0;
+            padding: 0;
+            background: #008080;
+            cursor: wait;
+        }
+        button{
+              font-size:11px;
+              outline:1px solid #000000;
+              background:#C0C0C0;
+              border-width:1px;
+              border-style:solid;
+              border-color:#FFFFFF #808080 #808080 #FFFFFF;
+        }                
+        .container {
+            background: #C0C0C0;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .color-boxes {
+            margin-bottom: 20px;
+        }
+        .color-box {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            margin-right: 10px;
+            outline:1px solid #000000;
+            border-width: 1px;
+            border-style: solid;
+            border-color: #000000; 
+        }
+        #notepad, .note-fields {
+            margin-bottom: 20px;
+        }
+        .note-fields input, .note-fields textarea {
+            width: 100%;
+            padding: 10px, 0px, 0px, 10px;
+            margin-bottom: 10px;
+        }
+        .note-fields textarea {
+            height: 100px;
+        }
+        .buttons {
+            margin-bottom: 20px;
+        }
+        .buttons button {
+            padding: 10px;
+            margin-right: 10px;
+            cursor: wait;
+        }
+        #listed {
+            margin-top: 20px;
+        }
+        .note {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            cursor: wait;
+        }
+        .display {
+            display: block;
+        }
+        .no-display {
+            display: none;
+        }
+        textarea{
+            resize: vertical;
+        }
+        #title-field{
+            height: 30px;
+            font-size: 25px;
+            font-weight: bold;
+            background-color: #C0C0C0;
+            font-color: #000000;
+            cursor: wait;
+        }
+        #body-field{
+            background-color: #C0C0C0;
+            font-color: #000000;
+            cursor: wait;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="xp-fake-button">X</button>
+        <button id="xp-fake-button">?</button>
+        <h1 id="big-title">Noterr</h1>
+        <div class="color-boxes">
+            <div class="color-box" style="background-color: #ffdddd;"></div>
+            <div class="color-box" style="background-color: #ddffdd;"></div>
+            <div class="color-box" style="background-color: #ddddff;"></div>
+            <div class="color-box" style="background-color: #C0C0C0;"></div>
+            <div class="color-box" style="background-color: #f2c580;"></div>
+            <div class="color-box" style="background-color: #d599f7;"></div>
+        </div>
+
+        <div id="notepad">
+            <div class="note-fields">
+                <input type="text" id="title-field" placeholder="Title">
+                <textarea id="body-field" placeholder="Write your note here..."></textarea>
+            </div>
+            <div class="buttons">
+                <button id="btn-save">Save</button>
+                <button id="btn-delete">Delete</button>
+            </div>
+        </div>
+        <div id="listed"></div>
+        <div id="edit-mode" class="no-display">
+            <h2>Edit Mode</h2>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var noteCount = 0;
+            var activeNote = null;
+
+            $('.color-box').click(function() {
+                var color = $(this).css('background-color');
+                $('#title-field').css('background-color', color);
+                $('#body-field').css('background-color', color);
+            });
+
+            $('#btn-save').click(function() {
+                var title = $('#title-field').val();
+                var body = $('#body-field').val();
+                if (title === '' && body === '') {
+                    alert('Please add a title or body to your note.');
+                    return;
+                }
+                var created = new Date();
+                var color = $('#title-field').css('background-color');
+                var id = 'note' + noteCount;
+                if (activeNote) {
+                    // Update existing note
+                    $('#' + activeNote).find('.list-title').html(title);
+                    $('#' + activeNote).find('.list-date').html(created.toLocaleString("en-US"));
+                    $('#' + activeNote).find('.list-text').html(body);
+                    $('#' + activeNote).css('background-color', color);
+                    localStorage.setItem(activeNote + '_title', title);
+                    localStorage.setItem(activeNote + '_body', body);
+                    localStorage.setItem(activeNote + '_color', color);
+                    localStorage.setItem(activeNote + '_created', created.toISOString());
+                    activeNote = null;
+                    $('#edit-mode').removeClass('display').addClass('no-display');
+                } else {
+                    // Add new note
+                    $('#listed').append('<div id="' + id + '" class="note" style="background-color: ' + color + '"><div class="list-title">' + title + '</div> <div class="list-date">' + created.toLocaleString("en-US") + '</div> <div class="list-text">' + body + '</div> </div>');
+                    localStorage.setItem(id + '_title', title);
+                    localStorage.setItem(id + '_body', body);
+                    localStorage.setItem(id + '_color', color);
+                    localStorage.setItem(id + '_created', created.toISOString());
+                    noteCount++;
+                }
+                localStorage.setItem('noteCount', noteCount);
+                $('#title-field').val('');
+                $('#body-field').val('');
+                $('#title-field').css('background-color', '#C0C0C0');
+                $('#body-field').css('background-color', '#C0C0C0');
+            });
+
+            $('#btn-delete').click(function() {
+                if (activeNote) {
+                    $('#' + activeNote).remove();
+                    localStorage.removeItem(activeNote + '_title');
+                    localStorage.removeItem(activeNote + '_body');
+                    localStorage.removeItem(activeNote + '_color');
+                    localStorage.removeItem(activeNote + '_created');
+                    activeNote = null;
+                    $('#edit-mode').removeClass('display').addClass('no-display');
+                }
+                $('#title-field').val('');
+                $('#body-field').val('');
+                $('#title-field').css('background-color', '#C0C0C0');
+                $('#body-field').css('background-color', '#C0C0C0');
+            });
+
+            $('#listed').click(function(e) {
+                var id = e.target.closest('.note').id;
+                var color = $('#' + id).css('background-color');
+                activeNote = id;
+                $('#edit-mode').removeClass('no-display').addClass('display');
+                var titleSel = $('#' + id).find('.list-title').html();
+                var bodySel = $('#' + id).find('.list-text').html();
+                $('#title-field').val(titleSel);
+                $('#body-field').val(bodySel);
+                $('#title-field').css('background-color', color);
+                $('#body-field').css('background-color', color);
+            });
+
+            // Load notes from localStorage
+            function load() {
+                var storedNoteCount = localStorage.getItem('noteCount');
+                if (!storedNoteCount) return;
+                for (var i = 0; i < storedNoteCount; i++) {
+                    var id = 'note' + i;
+                    var title = localStorage.getItem(id + '_title');
+                    var body = localStorage.getItem(id + '_body');
+                    var color = localStorage.getItem(id + '_color');
+                    var created = localStorage.getItem(id + '_created');
+                    if (title && body && color && created) {
+                        $('#listed').append('<div id="' + id + '" class="note" style="background-color: ' + color + '"><div class="list-title">' + title + '</div> <div class="list-date">' + new Date(created).toLocaleString("en-US") + '</div> <div class="list-text">' + body + '</div> </div>');
+                    }
+                }
+            }
+
+            load();
+        });
+    </script>
+</body>
+</html>
